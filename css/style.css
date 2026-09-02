@@ -165,20 +165,20 @@ body.locked {
   bottom: calc(1.35rem + env(safe-area-inset-bottom));
   z-index: 4;
   display: inline-block;
-  padding: 0.55rem 0.95rem;
-  border: 1px solid color-mix(in srgb, var(--gold-bright) 72%, transparent);
+  padding: 0.32rem 0.58rem;
+  border: 1px solid color-mix(in srgb, var(--gold-bright) 42%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--midnight) 58%, transparent);
+  background: color-mix(in srgb, var(--midnight) 18%, transparent);
   color: var(--ivory);
   font-family: "Cinzel", "Cormorant Garamond", serif;
-  font-size: 0.62rem;
+  font-size: 0.48rem;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   opacity: 0;
   pointer-events: none;
   transform: translateY(8px);
@@ -583,6 +583,7 @@ body.locked {
   font-size: clamp(2.6rem, 12vw, 3.7rem);
   font-weight: 400;
   line-height: 1.05;
+  margin-top: 0.7rem;
   color: var(--ivory);
 }
 
