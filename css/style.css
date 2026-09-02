@@ -159,6 +159,43 @@ body.locked {
   opacity: 1;
 }
 
+.skip-intro {
+  position: absolute;
+  right: max(1.1rem, env(safe-area-inset-right));
+  bottom: calc(1.35rem + env(safe-area-inset-bottom));
+  z-index: 4;
+  display: inline-block;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--gold-bright) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--midnight) 58%, transparent);
+  color: var(--ivory);
+  font-family: "Cinzel", "Cormorant Garamond", serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.hero.is-playing:not(.is-looping) .skip-intro {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.skip-intro:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 3px;
+}
+
 .welcome {
   position: relative;
   z-index: 1;

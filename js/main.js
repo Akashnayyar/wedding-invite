@@ -5,6 +5,8 @@ const loopVideo = document.getElementById("loop-video");
 const bgm = document.getElementById("bgm");
 const weddingSong = document.getElementById("wedding-song");
 const welcome = document.getElementById("welcome");
+const skipIntro = document.getElementById("skip-intro");
+const weddingSection = document.getElementById("rites");
 const scrollHint = document.getElementById("scroll-hint");
 const showerCanvas = document.getElementById("shower");
 
@@ -14,6 +16,7 @@ let celebrating = false;
 
 let started = false;
 let unlocked = false;
+let looping = false;
 
 function showFirstFrame() {
   if (video.readyState >= 2) {
@@ -101,7 +104,30 @@ function keepBgmPlaying() {
   bgm.play().catch(() => {});
 }
 
+function showSkipIntro() {
+  if (!skipIntro) return;
+  skipIntro.hidden = false;
+  skipIntro.removeAttribute("aria-hidden");
+  skipIntro.tabIndex = 0;
+}
+
+function hideSkipIntro() {
+  if (!skipIntro) return;
+  skipIntro.hidden = true;
+  skipIntro.setAttribute("aria-hidden", "true");
+  skipIntro.tabIndex = -1;
+}
+
+function goToWeddingSection() {
+  if (!weddingSection) return;
+  hideScrollHint();
+  weddingSection.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 async function startLoopVideo() {
+  if (looping) return;
+  looping = true;
+  hideSkipIntro();
   intro.classList.add("is-looping");
 
   if (loopVideo) {
@@ -121,6 +147,8 @@ async function startLoopVideo() {
 async function openEnvelope() {
   if (started) return;
   started = true;
+  intro.classList.add("is-playing");
+  showSkipIntro();
 
   await startBgm();
 
@@ -134,6 +162,26 @@ async function openEnvelope() {
   keepBgmPlaying();
 }
 
+async function skipToWedding(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  if (intro.classList.contains("is-looping")) return;
+
+  started = true;
+  intro.classList.add("is-playing");
+  hideSkipIntro();
+  video.pause();
+
+  await startBgm();
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const alreadyUnlocked = unlocked;
+  await startLoopVideo();
+
+  const delay = alreadyUnlocked || reducedMotion ? 80 : 1580;
+  window.setTimeout(goToWeddingSection, delay);
+}
+
 video.addEventListener("loadeddata", showFirstFrame);
 video.addEventListener("playing", keepBgmPlaying);
 video.addEventListener("ended", startLoopVideo);
@@ -142,6 +190,14 @@ if (loopVideo) {
 }
 
 intro.addEventListener("pointerup", openEnvelope);
+
+if (skipIntro) {
+  skipIntro.addEventListener("pointerup", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  skipIntro.addEventListener("click", skipToWedding);
+}
 
 function paintFoil(ctx, width, height) {
   const wash = ctx.createLinearGradient(0, 0, width, height);
