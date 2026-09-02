@@ -596,6 +596,8 @@ body.locked {
   position: sticky;
   top: 7vh;
   height: 78vh;
+  z-index: 2;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -608,7 +610,7 @@ body.locked {
   position: relative;
   width: min(78vw, 20.5rem, calc(62vh * 0.75));
   aspect-ratio: 3 / 4;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .polaroid {
@@ -624,7 +626,8 @@ body.locked {
     0 1px 0 rgba(255, 249, 241, 0.45) inset,
     0 18px 36px rgba(5, 10, 22, 0.45);
   opacity: 1;
-  transform: translate3d(0, 105%, 0);
+  --colorize: 0;
+  transform: translate3d(0, 110vh, 0);
   pointer-events: none;
   will-change: transform;
 }
@@ -636,11 +639,31 @@ body.locked {
   object-fit: cover;
   display: block;
   background: var(--rose);
+  filter:
+    grayscale(calc(1 - var(--colorize, 0)))
+    contrast(calc(1.42 - 0.42 * var(--colorize, 0)))
+    brightness(calc(0.78 + 0.22 * var(--colorize, 0)));
+  will-change: filter;
+}
+
+.polaroid::after {
+  content: "";
+  position: absolute;
+  inset: 0.5rem 0.5rem 1.15rem;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 10, 16, 0.38) 0%,
+      transparent 32%,
+      transparent 58%,
+      rgba(8, 10, 16, 0.48) 100%
+    );
+  opacity: calc(1 - var(--colorize, 0));
 }
 
 .polaroid--1 {
   --tilt: -1.4deg;
-  transform: translate3d(0, 0, 0) rotate(-1.4deg);
 }
 
 .polaroid--2 {

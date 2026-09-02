@@ -461,7 +461,6 @@ function setupStoryStack() {
   if (!track || cards.length === 0) return;
 
   const total = cards.length;
-  const last = total - 1;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function update() {
@@ -469,7 +468,7 @@ function setupStoryStack() {
     const range = Math.max(track.offsetHeight - window.innerHeight, 1);
     const passed = Math.min(Math.max(-rect.top, 0), range);
     const progress = passed / range;
-    const stacked = progress * last;
+    const stacked = progress * total;
 
     cards.forEach((card, i) => {
       const tilt = getComputedStyle(card).getPropertyValue("--tilt").trim() || "0deg";
@@ -478,23 +477,21 @@ function setupStoryStack() {
 
       if (reducedMotion) {
         const shown = Math.round(stacked);
-        const y = i <= shown ? 0 : 105;
-        card.style.transform = `translate3d(0, ${y}%, 0) rotate(${tilt})`;
+        const arrived = i <= shown;
+        card.style.setProperty("--colorize", arrived ? "1" : "0");
+        card.style.transform = `translate3d(0, ${arrived ? 0 : 110}vh, 0) rotate(${tilt})`;
         return;
       }
 
-      if (i === 0) {
-        card.style.transform = `translate3d(0, 0, 0) rotate(${tilt})`;
-        return;
-      }
-
-      const local = Math.min(1, Math.max(0, stacked - (i - 1)));
-      const y = (1 - local) * 105;
-      card.style.transform = `translate3d(0, ${y}%, 0) rotate(${tilt})`;
+      const local = Math.min(1, Math.max(0, stacked - i));
+      const rise = 1 - Math.pow(1 - local, 1.35);
+      const y = (1 - rise) * 110;
+      card.style.setProperty("--colorize", String(local));
+      card.style.transform = `translate3d(0, ${y}vh, 0) rotate(${tilt})`;
     });
 
     if (hint) {
-      hint.classList.toggle("is-visible", stacked < last - 0.08);
+      hint.classList.toggle("is-visible", stacked < total - 0.12);
     }
   }
 
