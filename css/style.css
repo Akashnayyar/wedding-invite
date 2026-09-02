@@ -664,6 +664,8 @@ body.locked {
 
 .polaroid--1 {
   --tilt: -1.4deg;
+  --colorize: 1;
+  transform: translate3d(0, 0, 0) rotate(-1.4deg);
 }
 
 .polaroid--2 {
