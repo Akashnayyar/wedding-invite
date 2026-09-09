@@ -18,11 +18,89 @@ let celebrating = false;
 let started = false;
 let unlocked = false;
 let looping = false;
+let introWatchId = 0;
+let introLastTime = 0;
+let introStuckSince = 0;
+let introStartedAt = 0;
 
 function showFirstFrame() {
   if (video.readyState >= 2) {
-    video.currentTime = 0.01;
+    try {
+      video.currentTime = 0.01;
+    } catch {
+      // Some mobile browsers reject seeking before enough data is buffered.
+    }
   }
+}
+
+function clearIntroWatch() {
+  if (introWatchId) {
+    window.clearInterval(introWatchId);
+    introWatchId = 0;
+  }
+  introStuckSince = 0;
+}
+
+function finishIntro() {
+  if (looping) return;
+  clearIntroWatch();
+  startLoopVideo();
+}
+
+function watchIntroPlayback() {
+  clearIntroWatch();
+  introLastTime = video.currentTime || 0;
+  introStuckSince = 0;
+  introStartedAt = Date.now();
+
+  introWatchId = window.setInterval(() => {
+    if (looping || unlocked) {
+      clearIntroWatch();
+      return;
+    }
+
+    const now = Date.now();
+    const t = video.currentTime || 0;
+    const duration = Number.isFinite(video.duration) ? video.duration : 0;
+
+    // iOS/Android often freeze near the end and never fire "ended".
+    if (duration > 0 && t >= Math.max(0, duration - 0.35)) {
+      finishIntro();
+      return;
+    }
+
+    // Absolute safety: never leave guests stuck longer than the clip + buffer.
+    const maxMs = duration > 0 ? (duration + 4) * 1000 : 22000;
+    if (now - introStartedAt > maxMs) {
+      finishIntro();
+      return;
+    }
+
+    if (video.paused) {
+      // Keep trying to resume if play was interrupted by the browser.
+      video.play().catch(() => {});
+      if (!introStuckSince) introStuckSince = now;
+      else if (now - introStuckSince > 2800) finishIntro();
+      return;
+    }
+
+    if (t > introLastTime + 0.04) {
+      introLastTime = t;
+      introStuckSince = 0;
+      return;
+    }
+
+    // Video frame stuck while audio keeps playing.
+    if (!introStuckSince) {
+      introStuckSince = now;
+      video.play().catch(() => {});
+      return;
+    }
+
+    if (now - introStuckSince > 2500) {
+      finishIntro();
+    }
+  }, 400);
 }
 
 function revealWelcomeOnScroll() {
@@ -130,11 +208,19 @@ function goToWeddingSection() {
 async function startLoopVideo() {
   if (looping) return;
   looping = true;
+  clearIntroWatch();
   hideSkipIntro();
   intro.classList.add("is-looping");
 
+  try {
+    video.pause();
+  } catch {
+    // Ignore pause failures on broken media elements.
+  }
+
   if (loopVideo) {
     loopVideo.muted = true;
+    loopVideo.playsInline = true;
     loopVideo.loop = true;
     try {
       await loopVideo.play();
@@ -156,10 +242,12 @@ async function openEnvelope() {
   await startBgm();
 
   video.muted = true;
+  video.playsInline = true;
   try {
     await video.play();
+    watchIntroPlayback();
   } catch {
-    startLoopVideo();
+    finishIntro();
   }
 
   keepBgmPlaying();
@@ -173,7 +261,12 @@ async function skipToWedding(event) {
   started = true;
   intro.classList.add("is-playing");
   hideSkipIntro();
-  video.pause();
+  clearIntroWatch();
+  try {
+    video.pause();
+  } catch {
+    // Ignore.
+  }
 
   await startBgm();
 
@@ -181,16 +274,37 @@ async function skipToWedding(event) {
   const alreadyUnlocked = unlocked;
   await startLoopVideo();
 
-  const delay = alreadyUnlocked || reducedMotion ? 80 : 1580;
+  const delay = alreadyUnlocked || reducedMotion ? 80 : 1700;
   window.setTimeout(goToWeddingSection, delay);
 }
 
 video.addEventListener("loadeddata", showFirstFrame);
 video.addEventListener("playing", keepBgmPlaying);
-video.addEventListener("ended", startLoopVideo);
+video.addEventListener("ended", finishIntro);
+video.addEventListener("waiting", () => {
+  if (!started || looping) return;
+  if (!introStuckSince) introStuckSince = Date.now();
+});
+video.addEventListener("stalled", () => {
+  if (!started || looping) return;
+  video.play().catch(() => {});
+});
+video.addEventListener("error", () => {
+  if (started && !looping) finishIntro();
+});
 if (loopVideo) {
   loopVideo.addEventListener("playing", keepBgmPlaying);
 }
+
+// If the tab comes back after a freeze, recover instead of staying stuck.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden || !started || looping) return;
+  if (video.ended || (video.duration && video.currentTime >= video.duration - 0.35)) {
+    finishIntro();
+    return;
+  }
+  video.play().catch(() => finishIntro());
+});
 
 intro.addEventListener("pointerup", openEnvelope);
 
