@@ -62,7 +62,8 @@ function unlockPage() {
   unlocked = true;
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const nudge = Math.round(window.innerHeight * 0.11);
+  // Stronger peek so guests clearly notice there is more below.
+  const nudge = Math.round(window.innerHeight * 0.28);
 
   if (reducedMotion) {
     scrollHint.classList.add("is-visible");
@@ -73,14 +74,14 @@ function unlockPage() {
   welcome.classList.add("is-visible");
 
   requestAnimationFrame(() => {
-    page.style.transition = "transform 1.45s cubic-bezier(0.16, 1, 0.3, 1)";
+    page.style.transition = "transform 1.65s cubic-bezier(0.16, 1, 0.3, 1)";
     page.style.transform = `translateY(-${nudge}px)`;
     scrollHint.classList.add("is-visible");
   });
 
   window.setTimeout(() => {
     settleNudge(nudge);
-  }, 1500);
+  }, 1700);
 }
 
 async function startBgm() {
