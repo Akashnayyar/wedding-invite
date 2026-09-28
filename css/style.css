@@ -413,7 +413,7 @@ body.locked {
   display: grid;
   place-items: center;
   height: 100%;
-  font-size: clamp(1.35rem, 5.4vw, 1.7rem);
+  font-size: clamp(1.85rem, 7.2vw, 2.4rem);
   letter-spacing: 0.04em;
   color: var(--midnight);
 }
